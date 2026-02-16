@@ -56,6 +56,7 @@ async function checkPermissions(fullPath) {
 
 module.exports = function fsbrowse(opts) {
   const baseDir = (opts && opts.baseDir) || process.env.BASE_DIR || '/files';
+  const name = (opts && opts.name) || 'fsbrowse';
   const resolveWithBaseDir = makeResolver(baseDir);
   const router = express.Router();
   const publicDir = path.join(__dirname, 'public');
@@ -70,6 +71,10 @@ module.exports = function fsbrowse(opts) {
       );
       html = html.replace(/href="\/style\.css"/g, `href="${basePath}/style.css"`);
       html = html.replace(/src="\/app\.js"/g, `src="${basePath}/app.js"`);
+      if (name !== 'fsbrowse') {
+        html = html.replace(/<title>fsbrowse<\/title>/, `<title>${name}</title>`);
+        html = html.replace(/>fsbrowse<\/h1>/, `>${name}</h1>`);
+      }
       res.type('text/html').send(html);
     } else {
       next();
