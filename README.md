@@ -68,7 +68,7 @@ BASEPATH=           # URL subpath prefix (default: empty, e.g., /files for http:
 
 ## ✅ Why Buildless Works
 
-NHFS is a file browser + uploader. It needs:
+fsbrowse is a file browser + uploader. It needs:
 - REST API endpoints (Express does this)
 - HTML/CSS/JS frontend (browsers run this directly)
 
