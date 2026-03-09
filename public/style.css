@@ -16,8 +16,20 @@
   --danger: #ef4444;
 }
 
+[data-theme="dark"] {
+    --primary: #9ca3af;
+    --primary-dark: #6b7280;
+    --secondary: #9ca3af;
+    --border: #374151;
+    --bg: #111827;
+    --bg-alt: #1f2937;
+    --text: #f3f4f6;
+    --text-light: #9ca3af;
+    --danger: #f87171;
+}
+
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --primary: #9ca3af;
     --primary-dark: #6b7280;
     --secondary: #9ca3af;

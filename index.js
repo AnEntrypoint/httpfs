@@ -57,6 +57,7 @@ async function checkPermissions(fullPath) {
 module.exports = function fsbrowse(opts) {
   const baseDir = (opts && opts.baseDir) || process.env.BASE_DIR || '/files';
   const name = (opts && opts.name) || 'fsbrowse';
+  const themeKeys = (opts && opts.themeKeys) || 'gmgui-theme,theme';
   const resolveWithBaseDir = makeResolver(baseDir);
   const router = express.Router();
   const publicDir = path.join(__dirname, 'public');
@@ -67,7 +68,7 @@ module.exports = function fsbrowse(opts) {
       let html = fsSync.readFileSync(path.join(publicDir, 'index.html'), 'utf-8');
       html = html.replace(
         '<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js',
-        `<script>window.BASEPATH='${basePath}';</script><script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js`
+        `<script>window.THEME_KEYS='${themeKeys}';window.BASEPATH='${basePath}';</script><script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js`
       );
       html = html.replace(/href="\/style\.css"/g, `href="${basePath}/style.css"`);
       html = html.replace(/src="\/app\.js"/g, `src="${basePath}/app.js"`);

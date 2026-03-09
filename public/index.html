@@ -4,6 +4,26 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>fsbrowse</title>
+    <script>
+    (function() {
+      var keys = (window.THEME_KEYS || 'gmgui-theme,theme').split(',');
+      function detect() {
+        for (var i = 0; i < keys.length; i++) {
+          var v = localStorage.getItem(keys[i].trim());
+          if (v === 'dark' || v === 'light') {
+            document.documentElement.setAttribute('data-theme', v);
+            return;
+          }
+        }
+      }
+      detect();
+      window.addEventListener('storage', function(e) {
+        for (var i = 0; i < keys.length; i++) {
+          if (e.key === keys[i].trim()) { detect(); return; }
+        }
+      });
+    })();
+  </script>
   <link rel="stylesheet" href="/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>

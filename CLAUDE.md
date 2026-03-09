@@ -27,7 +27,18 @@
 - Drag-drop upload with progress tracking
 - Preview support: inline images, HTML5 audio/video players
 - Breadcrumb navigation with history
-- Dark mode via CSS prefers-color-scheme media query
+- Dark mode via CSS prefers-color-scheme media query and data-theme attribute
+### Theme Integration
+
+When embedded in a host app (like agentgui), fsbrowse inherits the host's light/dark theme:
+
+- **localStorage detection**: On load, checks configurable localStorage keys for 'dark' or 'light' values
+- **data-theme attribute**: Sets `[data-theme="dark"]` on `<html>` which CSS selectors match
+- **Storage event listener**: Reacts to theme changes in real-time across tabs/frames
+- **Fallback**: When no localStorage theme is found, falls back to `prefers-color-scheme` media query
+- **Override protection**: When `data-theme="light"` is set, the dark media query is blocked via `:root:not([data-theme="light"])`
+
+**Factory option**: `fsbrowse({ themeKeys: 'my-app-theme,theme' })` configures which localStorage keys to check. Default: `'gmgui-theme,theme'`.
 - Responsive design: mobile-optimized layout
 
 ### Library Usage
