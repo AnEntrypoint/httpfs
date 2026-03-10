@@ -6,6 +6,7 @@ const app = {
   files: [],
 
   async init() {
+    this.setupThemeSync();
     this.setupDragDrop();
     this.setupFileInput();
     this.setupKeyboardShortcuts();
@@ -14,6 +15,26 @@ const app = {
 
   api(path) {
     return `${this.basePath}${path}`;
+  },
+
+  setupThemeSync() {
+    // Sync theme from parent window or localStorage
+    const syncTheme = () => {
+      const theme = localStorage.getItem('gmgui-theme') ||
+                    (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.className = theme;
+      document.documentElement.setAttribute('data-theme', theme);
+    };
+
+    syncTheme();
+
+    // Watch for storage changes from other tabs/windows
+    window.addEventListener('storage', e => {
+      if (e.key === 'gmgui-theme') syncTheme();
+    });
+
+    // Watch for media query changes (system theme changes)
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', syncTheme);
   },
 
   setupKeyboardShortcuts() {

@@ -6,7 +6,7 @@
 
 :root {
   --primary: #3b82f6;
-  --primary-dark: #2563eb;
+  --primary-dark: #1e40af;
   --secondary: #6b7280;
   --border: #e5e7eb;
   --bg: #ffffff;
@@ -16,29 +16,45 @@
   --danger: #ef4444;
 }
 
-[data-theme="dark"] {
-    --primary: #9ca3af;
-    --primary-dark: #6b7280;
-    --secondary: #9ca3af;
-    --border: #374151;
-    --bg: #111827;
-    --bg-alt: #1f2937;
-    --text: #f3f4f6;
-    --text-light: #9ca3af;
-    --danger: #f87171;
+/* Light mode - explicit */
+[data-theme="light"],
+html.light {
+  --primary: #3b82f6;
+  --primary-dark: #1e40af;
+  --secondary: #6b7280;
+  --border: #e5e7eb;
+  --bg: #ffffff;
+  --bg-alt: #f9fafb;
+  --text: #111827;
+  --text-light: #6b7280;
+  --danger: #ef4444;
+}
+
+/* Dark mode - explicit, matches AgentGUI grey dark theme */
+[data-theme="dark"],
+html.dark {
+  --primary: #737373;
+  --primary-dark: #525252;
+  --secondary: #a3a3a3;
+  --border: #333333;
+  --bg: #1a1a1a;
+  --bg-alt: #242424;
+  --text: #e5e5e5;
+  --text-light: #a3a3a3;
+  --danger: #ef4444;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --primary: #9ca3af;
-    --primary-dark: #6b7280;
-    --secondary: #9ca3af;
-    --border: #374151;
-    --bg: #111827;
-    --bg-alt: #1f2937;
-    --text: #f3f4f6;
-    --text-light: #9ca3af;
-    --danger: #f87171;
+  :root:not([data-theme="light"]):not(.light) {
+    --primary: #737373;
+    --primary-dark: #525252;
+    --secondary: #a3a3a3;
+    --border: #333333;
+    --bg: #1a1a1a;
+    --bg-alt: #242424;
+    --text: #e5e5e5;
+    --text-light: #a3a3a3;
+    --danger: #ef4444;
   }
 }
 
