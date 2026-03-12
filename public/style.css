@@ -211,8 +211,16 @@ html, body {
 }
 
 .file-row:hover {
-  background-color: var(--border);
+  background-color: var(--primary);
   border-color: var(--primary);
+  color: white;
+}
+
+[data-theme="dark"] .file-row:hover,
+html.dark .file-row:hover {
+  background-color: var(--primary);
+  border-color: var(--primary);
+  color: white;
 }
 
 .file-info {
@@ -243,6 +251,14 @@ html, body {
 
 .file-name:hover {
   text-decoration: underline;
+}
+
+.file-row:hover .file-name {
+  color: white;
+}
+
+.file-row:hover .file-meta {
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .file-meta {
@@ -367,7 +383,12 @@ html, body {
 .modal-content input:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="dark"] .modal-content input:focus,
+html.dark .modal-content input:focus {
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
 }
 
 .modal-actions {
