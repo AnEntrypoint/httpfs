@@ -31,9 +31,9 @@ function makeResolver(baseDir) {
 
 async function getFileType(fullPath) {
   try {
-    const stat = await fs.stat(fullPath);
-    if (stat.isDirectory()) return 'dir';
+    const stat = await fs.lstat(fullPath);
     if (stat.isSymbolicLink()) return 'symlink';
+    if (stat.isDirectory()) return 'dir';
     const ext = path.extname(fullPath).slice(1).toLowerCase();
     for (const [type, exts] of Object.entries(fileTypeMap)) {
       if (exts.includes(ext)) return type;
@@ -54,6 +54,14 @@ async function checkPermissions(fullPath) {
   }
 }
 
+function escapeJsString(s) {
+  return String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/</g, '\\x3c').replace(/>/g, '\\x3e');
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 module.exports = function fsbrowse(opts) {
   const baseDir = (opts && opts.baseDir) || process.env.BASE_DIR || '/files';
   const name = (opts && opts.name) || 'fsbrowse';
@@ -68,13 +76,13 @@ module.exports = function fsbrowse(opts) {
       let html = fsSync.readFileSync(path.join(publicDir, 'index.html'), 'utf-8');
       html = html.replace(
         '<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js',
-        `<script>window.THEME_KEYS='${themeKeys}';window.BASEPATH='${basePath}';</script><script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js`
+        `<script>window.THEME_KEYS='${escapeJsString(themeKeys)}';window.BASEPATH='${escapeJsString(basePath)}';</script><script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js`
       );
-      html = html.replace(/href="\/style\.css"/g, `href="${basePath}/style.css"`);
-      html = html.replace(/src="\/app\.js"/g, `src="${basePath}/app.js"`);
+      html = html.replace(/href="\/style\.css"/g, `href="${escapeHtml(basePath)}/style.css"`);
+      html = html.replace(/src="\/app\.js"/g, `src="${escapeHtml(basePath)}/app.js"`);
       if (name !== 'fsbrowse') {
-        html = html.replace(/<title>fsbrowse<\/title>/, `<title>${name}</title>`);
-        html = html.replace(/>fsbrowse<\/h1>/, `>${name}</h1>`);
+        html = html.replace(/<title>fsbrowse<\/title>/, `<title>${escapeHtml(name)}</title>`);
+        html = html.replace(/>fsbrowse<\/h1>/, `>${escapeHtml(name)}</h1>`);
       }
       res.type('text/html').send(html);
     } else {
@@ -181,7 +189,8 @@ module.exports = function fsbrowse(opts) {
       }
 
       bb.on('file', async (fieldname, file, info) => {
-        const fileName = info.filename;
+        const fileName = path.basename(info.filename || 'unnamed');
+        if (!fileName || fileName === '.' || fileName === '..') { file.resume(); return; }
         const filePath = path.join(fullUploadDir, fileName);
 
         try {
@@ -257,9 +266,9 @@ module.exports = function fsbrowse(opts) {
         return res.status(413).json({ ok: false, error: 'FILE_TOO_LARGE' });
       }
 
-      const content = await fs.readFile(fullPath, 'utf-8').catch(() =>
-        fs.readFile(fullPath, 'binary').then(b => `[Binary file - ${stat.size} bytes]`)
-      );
+      const buf = await fs.readFile(fullPath);
+      const hasNullOrInvalid = buf.some((b, i) => b === 0 || (b >= 0x80 && b <= 0xBF && (i === 0 || buf[i-1] < 0x80)));
+      const content = hasNullOrInvalid ? `[Binary file - ${stat.size} bytes]` : buf.toString('utf-8');
 
       res.json({ ok: true, value: content, size: stat.size });
     } catch (err) {
@@ -312,14 +321,18 @@ module.exports = function fsbrowse(opts) {
           return res.status(404).json({ ok: false, error: 'ENOENT' });
         }
 
-        const newPath = path.join(path.dirname(fullPath), newName);
+        const safeName = path.basename(newName);
+        if (!safeName || safeName === '.' || safeName === '..') {
+          return res.status(400).json({ ok: false, error: 'INVALID_NAME' });
+        }
+        const newPath = path.join(path.dirname(fullPath), safeName);
         if (fsSync.existsSync(newPath)) {
           return res.status(400).json({ ok: false, error: 'EEXIST' });
         }
 
         try {
           await fs.rename(fullPath, newPath);
-          const newRelPath = path.join(path.dirname(oldPath), newName);
+          const newRelPath = path.join(path.dirname(oldPath), safeName);
           res.json({ ok: true, value: newRelPath });
         } catch (err) {
           console.error('Error renaming:', err);

@@ -18,22 +18,25 @@ const app = {
   },
 
   setupThemeSync() {
-    // Sync theme from parent window or localStorage
+    const keys = (window.THEME_KEYS || 'gmgui-theme,theme').split(',').map(k => k.trim());
+
     const syncTheme = () => {
-      const theme = localStorage.getItem('gmgui-theme') ||
-                    (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      let theme = null;
+      for (const key of keys) {
+        const val = localStorage.getItem(key);
+        if (val === 'dark' || val === 'light') { theme = val; break; }
+      }
+      if (!theme) theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
       document.documentElement.className = theme;
       document.documentElement.setAttribute('data-theme', theme);
     };
 
     syncTheme();
 
-    // Watch for storage changes from other tabs/windows
     window.addEventListener('storage', e => {
-      if (e.key === 'gmgui-theme') syncTheme();
+      if (keys.includes(e.key)) syncTheme();
     });
 
-    // Watch for media query changes (system theme changes)
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', syncTheme);
   },
 
@@ -109,6 +112,10 @@ const app = {
     }
   },
 
+  escapeAttr(text) {
+    return String(text).replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  },
+
   renderBreadcrumbs(currentPath) {
     const container = document.getElementById('breadcrumbs');
     const parts = currentPath === './' ? [] : currentPath.split('/').filter(Boolean);
@@ -118,7 +125,7 @@ const app = {
     let path = './';
     for (const part of parts) {
       path = path === './' ? `./${part}` : `${path}/${part}`;
-      html += `<span class="breadcrumb-sep">/</span><button class="breadcrumb-btn" onclick="app.loadFiles('${path}')">${part}</button>`;
+      html += `<span class="breadcrumb-sep">/</span><button class="breadcrumb-btn" onclick="app.loadFiles('${this.escapeAttr(path)}')">${this.escapeHtml(part)}</button>`;
     }
 
     container.innerHTML = html;
@@ -137,22 +144,25 @@ const app = {
       const icon = this.getFileIcon(file.type);
       const size = file.type === 'dir' ? '-' : this.formatSize(file.size);
       const date = new Date(file.time?.modified).toLocaleDateString();
+      const safePath = this.escapeAttr(file.path);
+      const safeType = this.escapeAttr(file.type);
+      const safeName = this.escapeAttr(file.name);
 
       html += `
-        <div class="file-row" data-path="${file.path}" data-type="${file.type}">
+        <div class="file-row" data-path="${safePath}" data-type="${safeType}">
           <div class="file-info">
             <span class="file-icon">${icon}</span>
             <div class="file-details">
-              <div class="file-name" onclick="app.openFile('${file.path}', '${file.type}')">${this.escapeHtml(file.name)}</div>
+              <div class="file-name" onclick="app.openFile('${safePath}', '${safeType}')">${this.escapeHtml(file.name)}</div>
               <div class="file-meta">${size} · ${date}</div>
             </div>
           </div>
           <div class="file-actions">
-            ${file.type === 'dir' ? `<button class="icon-btn" onclick="app.loadFiles('${file.path}')" title="Open">→</button>` : ''}
-            ${file.type !== 'dir' ? `<button class="icon-btn" draggable="true" ondragstart="app.startDragDownload('${file.path}')" title="Drag to download" style="cursor: grab;">⬆</button>` : ''}
-            <button class="icon-btn" onclick="app.downloadFile('${file.path}')" title="Download">⬇</button>
-            <button class="icon-btn" onclick="app.startRename('${file.path}', '${this.escapeHtml(file.name)}')" title="Rename">✎</button>
-            <button class="icon-btn delete" onclick="app.deleteFile('${file.path}')" title="Delete">✕</button>
+            ${file.type === 'dir' ? `<button class="icon-btn" onclick="app.loadFiles('${safePath}')" title="Open">→</button>` : ''}
+            ${file.type !== 'dir' ? `<button class="icon-btn" draggable="true" ondragstart="app.startDragDownload('${safePath}')" title="Drag to download" style="cursor: grab;">⬆</button>` : ''}
+            <button class="icon-btn" onclick="app.downloadFile('${safePath}')" title="Download">⬇</button>
+            <button class="icon-btn" onclick="app.startRename('${safePath}', '${safeName}')" title="Rename">✎</button>
+            <button class="icon-btn delete" onclick="app.deleteFile('${safePath}')" title="Delete">✕</button>
           </div>
         </div>
       `;
