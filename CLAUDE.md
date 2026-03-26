@@ -19,6 +19,7 @@
 - All endpoints return JSON with consistent {ok, value/error} response format
 - File type detection via extension mapping (image, video, audio, text, code, archive, document) using `fs.lstat()` (not `fs.stat()`) so symlinks are detected
 - Upload filenames sanitized via `path.basename()` — busboy also strips path separators but defense-in-depth matters
+- Rename newName sanitized via `path.basename()` — without this, names like `../../evil.txt` escape the parent directory
 - Server-side HTML injection uses `escapeJsString()` and `escapeHtml()` for all dynamic values (name, themeKeys, basePath)
 - Permission checks via fs.access() with granular read/write flags
 
@@ -85,7 +86,8 @@ When embedded in a host app (like agentgui), fsbrowse inherits the host's light/
 - Express sufficient for file operations without Next.js framework overhead
 
 ### Testing
-- `node test.js` runs 74 core assertions; `node test-extended.js` runs 68 extended assertions (142 total)
+- `node test.js` (74), `node test-extended.js` (68), `node test-final.js` (39) — 181 total assertions
 - Tests use real Express server instances (no mocks) with temp directories
 - Core: all API endpoints, path traversal, XSS injection, binary detection, symlink handling, CLI parsing, BASEPATH routing
 - Extended: all fileTypeMap categories, broken symlinks, empty dirs, escape functions, factory defaults, static serving, multibyte UTF-8, download headers, upload/rename/move edge cases, BASEPATH env precedence, frontend utility functions
+- Final: rename newName traversal fix, sort order, special filenames (spaces/unicode/parens), multi-file upload, return values, 5MB boundary, directory rename/move, concurrent requests, factory null/undefined
