@@ -17,7 +17,9 @@
 - Multipart upload via busboy streaming (no memory buffer for large files)
 - File operations: list, upload, download, delete, rename, move, mkdir
 - All endpoints return JSON with consistent {ok, value/error} response format
-- File type detection via extension mapping (image, video, audio, text, code, archive, document)
+- File type detection via extension mapping (image, video, audio, text, code, archive, document) using `fs.lstat()` (not `fs.stat()`) so symlinks are detected
+- Upload filenames sanitized via `path.basename()` — busboy also strips path separators but defense-in-depth matters
+- Server-side HTML injection uses `escapeJsString()` and `escapeHtml()` for all dynamic values (name, themeKeys, basePath)
 - Permission checks via fs.access() with granular read/write flags
 
 ### Frontend (Vanilla JavaScript)
@@ -63,7 +65,7 @@ When embedded in a host app (like agentgui), fsbrowse inherits the host's light/
 
 ### File Viewing Implementation
 - `/api/view/:path` endpoint reads files up to 5MB limit for preview
-- UTF-8 decoding with binary fallback detection (shows "[Binary file - X bytes]" for non-text)
+- Binary detection via byte heuristic (null bytes, invalid UTF-8 continuation bytes) — Node's `readFile('utf-8')` never throws on invalid UTF-8, so catch-based detection does not work
 - Syntax highlighting via highlight.js CDN (atom-one-dark theme) - not bundled to keep code lean
 - File type detection by extension determines rendering strategy:
   - Code (js/ts/py/go/rs/etc): syntax highlighted via hljs.highlightAll()
@@ -73,10 +75,16 @@ When embedded in a host app (like agentgui), fsbrowse inherits the host's light/
   - Other: raw text up to 10KB with truncation warning
 - Modal keyboard shortcuts: ESC to close, Enter to submit in forms
 - Drag-download: uses dataTransfer.setData('text/uri-list') for OS integration
-- All text content escaped via textContent/escapeHtml() to prevent XSS injection
+- All text content escaped via textContent/escapeHtml()/escapeAttr() to prevent XSS injection
+- Frontend `escapeAttr()` used for all values interpolated into HTML attributes (onclick handlers, data attributes)
 
 ### Why This Works
 - File server needs: REST API for file ops + static HTML UI
 - Does NOT need: SSR, JSX compilation, styled-components, TypeScript types, build optimization
 - Vanilla JS perfectly adequate for client-side interactivity
 - Express sufficient for file operations without Next.js framework overhead
+
+### Testing
+- `node test.js` runs 74 assertions covering all API endpoints, security vectors, CLI parsing, and edge cases
+- Tests use real Express server instances (no mocks) with temp directories
+- Key coverage: path traversal, XSS injection, binary detection, symlink handling, BASEPATH routing, response format consistency
