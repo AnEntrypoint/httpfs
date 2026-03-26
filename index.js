@@ -321,14 +321,18 @@ module.exports = function fsbrowse(opts) {
           return res.status(404).json({ ok: false, error: 'ENOENT' });
         }
 
-        const newPath = path.join(path.dirname(fullPath), newName);
+        const safeName = path.basename(newName);
+        if (!safeName || safeName === '.' || safeName === '..') {
+          return res.status(400).json({ ok: false, error: 'INVALID_NAME' });
+        }
+        const newPath = path.join(path.dirname(fullPath), safeName);
         if (fsSync.existsSync(newPath)) {
           return res.status(400).json({ ok: false, error: 'EEXIST' });
         }
 
         try {
           await fs.rename(fullPath, newPath);
-          const newRelPath = path.join(path.dirname(oldPath), newName);
+          const newRelPath = path.join(path.dirname(oldPath), safeName);
           res.json({ ok: true, value: newRelPath });
         } catch (err) {
           console.error('Error renaming:', err);
