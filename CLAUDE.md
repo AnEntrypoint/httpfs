@@ -85,6 +85,7 @@ When embedded in a host app (like agentgui), fsbrowse inherits the host's light/
 - Express sufficient for file operations without Next.js framework overhead
 
 ### Testing
-- `node test.js` runs 74 assertions covering all API endpoints, security vectors, CLI parsing, and edge cases
+- `node test.js` runs 74 core assertions; `node test-extended.js` runs 68 extended assertions (142 total)
 - Tests use real Express server instances (no mocks) with temp directories
-- Key coverage: path traversal, XSS injection, binary detection, symlink handling, BASEPATH routing, response format consistency
+- Core: all API endpoints, path traversal, XSS injection, binary detection, symlink handling, CLI parsing, BASEPATH routing
+- Extended: all fileTypeMap categories, broken symlinks, empty dirs, escape functions, factory defaults, static serving, multibyte UTF-8, download headers, upload/rename/move edge cases, BASEPATH env precedence, frontend utility functions
